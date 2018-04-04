@@ -286,3 +286,13 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# osx
+.DS_Store
+
+# vscode
+debug*
+.vscode
+
+# qtmoc
+*moc*
