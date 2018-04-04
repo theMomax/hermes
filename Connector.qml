@@ -1,3 +1,5 @@
+import QtQuick 2.7
+
 Connections
 {
     property var idMap: ({
@@ -25,7 +27,11 @@ Connections
             Qt.createQmlObject(qmlElement, this.idMap[target], target + "_ChildTemplate")
             break;
         case 2:
-            var template = openFile(data.template)
+            // open file
+            var request = new XMLHttpRequest();
+            request.open("GET", data.template, false);
+            request.send(null);
+            var template = request.responseText;
             var qmlElement = template.replace(/<\w+>/i, function(match){
                 return data.variables[match.replace("<","").replace(">","")]
             })
@@ -36,11 +42,4 @@ Connections
             break;
         }
     }
-}
-
-function openFile(fileUrl) {
-    var request = new XMLHttpRequest();
-    request.open("GET", fileUrl, false);
-    request.send(null);
-    return request.responseText;
 }

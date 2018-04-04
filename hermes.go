@@ -17,8 +17,9 @@ const (
 	// {"template": "Text{text: 'Hello World <name> !'}", "variables":
 	// {"name": "John Smith"}}"
 	ModeAdd
-	// ModeAddFromFile is the same as ModeAdd, but reads the template from a given path. e.g.: target="some_Qml_Row's_id"; jsondata="
-	// {"template": "path/to/your/template.qml", "variables":{"name": "John Smith"}}"
+	// ModeAddFromFile is the same as ModeAdd, but reads the template from a
+	// given path. e.g.: target="some_Qml_Row's_id"; jsondata="{"template":
+	// "path/to/your/template/from/your/main.qml", "variables":{"name": "John Smith"}}"
 	ModeAddFromFile
 	// ModeRemove deletes an element by its qml-id provided in target.
 	// The jsondata should be a empty string.
@@ -47,7 +48,7 @@ func NewBridgeController(engine *qml.QQmlApplicationEngine) *Controller {
 		qmlBridge:      NewQmlBridge(nil),
 		eventListeners: make(map[string]func(string, string)),
 	}
-	engine.RootContext().SetContextProperty("qmlBridge", c.qmlBridge)
+	engine.RootContext().SetContextProperty("hermes", c.qmlBridge)
 	c.qmlBridge.ConnectSendToGo(c.interpretQmlCommand)
 	return &c
 }
@@ -66,7 +67,9 @@ func (c *Controller) RemoveEventListener(event string) {
 
 func (c *Controller) interpretQmlCommand(action, source, jsondata string) {
 	log.Println("qml to go: " + string(action) + " | " + source + " | " + jsondata)
-	c.eventListeners[action](source, jsondata)
+	if c.eventListeners[action] != nil {
+		c.eventListeners[action](source, jsondata)
+	}
 }
 
 // SendToQml sends a message to the qml-code. Read the mode-constants'
