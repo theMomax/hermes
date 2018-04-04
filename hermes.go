@@ -1,6 +1,7 @@
 package hermes
 
 import (
+	"bytes"
 	"log"
 
 	"github.com/therecipe/qt/core"
@@ -104,44 +105,50 @@ func (c *Controller) RemoveFromQml(target, jsondata string) {
 // Every odd argument is a property-name, every even one
 // the previous property's value
 func BuildSetModeJSON(data ...string) string {
+	buff := bytes.NewBuffer([]byte{})
 	if len(data)%2 != 0 {
-		return "{}"
-	}
-	json := "{"
-	for i, d := range data {
-		if i%2 == 0 {
-			json += `"` + d + `":`
-		} else if i+1 == len(data) {
-			json += `"` + d + `"}`
-		} else {
-			json += `"` + d + `",`
+		buff.WriteString("{}")
+	} else {
+		buff.WriteString("{")
+		for i, d := range data {
+			buff.WriteString(`"`)
+			buff.WriteString(d)
+			if i%2 == 0 {
+				buff.WriteString(`":`)
+			} else if i+1 == len(data) {
+				buff.WriteString(`"}`)
+			} else {
+				buff.WriteString(`",`)
+			}
 		}
 	}
-	return json
+	return buff.String()
 }
 
 // BuildAddModeJSON helps building trivial JSON strings. The template
 // is the template string or filepath. Every odd data argument is a
 // variable-name, every even one the previous variable's value
 func BuildAddModeJSON(template string, data ...string) string {
-	json := "{"
-	json += `"template":"` + template + `"`
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(`{"template":"`)
+	buff.WriteString(template)
+	buff.WriteString(`"`)
 
-	if len(data)%2 != 0 {
-		return json + "}"
-	} else {
-		json += `, "variables": {`
-
+	if len(data)%2 == 0 {
+		buff.WriteString(`, "variables": {`)
 		for i, d := range data {
+			buff.WriteString(`"`)
+			buff.WriteString(d)
 			if i%2 == 0 {
-				json += `"` + d + `":`
+				buff.WriteString(`":`)
 			} else if i+1 == len(data) {
-				json += `"` + d + `"}`
+				buff.WriteString(`"}`)
 			} else {
-				json += `"` + d + `",`
+				buff.WriteString(`",`)
 			}
 		}
 
-		return json + "}"
 	}
+	buff.WriteString("}")
+	return buff.String()
 }
