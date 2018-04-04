@@ -96,3 +96,49 @@ func (c *Controller) AddToQmlFromFilepath(target, jsondata string) {
 func (c *Controller) RemoveFromQml(target, jsondata string) {
 	c.SendToQml(ModeRemove, target, jsondata)
 }
+
+// BuildSetModeJSON helps building trivial JSON strings.
+// Every odd argument is a property-name, every even one
+// the previous property's value
+func BuildSetModeJSON(data ...string) string {
+	if len(data)%2 != 0 {
+		return "{}"
+	}
+	json := "{"
+	for i, d := range data {
+		if i%2 == 0 {
+			json += `"` + d + `":`
+		} else if i+1 == len(data) {
+			json += `"` + d + `"}`
+		} else {
+			json += `"` + d + `",`
+		}
+	}
+	return json
+}
+
+// BuildAddModeJSON helps building trivial JSON strings. The template
+// is the template string or filepath. Every odd data argument is a
+// variable-name, every even one the previous variable's value
+func BuildAddModeJSON(template string, data ...string) string {
+	json := "{"
+	json += `"template":"` + template + `"`
+
+	if len(data)%2 != 0 {
+		return json + "}"
+	} else {
+		json += `, "variables": {`
+
+		for i, d := range data {
+			if i%2 == 0 {
+				json += `"` + d + `":`
+			} else if i+1 == len(data) {
+				json += `"` + d + `"}`
+			} else {
+				json += `"` + d + `",`
+			}
+		}
+
+		return json + "}"
+	}
+}
