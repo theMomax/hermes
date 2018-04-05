@@ -16,11 +16,16 @@ const (
 	// ModeAdd adds a new element specified in the jsondata string to the
 	// target element. e.g.: target="some_Qml_Row's_id"; jsondata="
 	// {"template": "Text{text: 'Hello World <name> !'}", "variables":
-	// {"name": "John Smith"}}"
+	// {"name": "John Smith"}}". Only the template's root element will be
+	// accessible via its id. The id can be hardcoded in the template or
+	// dynamically added using the variables section.
 	ModeAdd
 	// ModeAddFromFile is the same as ModeAdd, but reads the template from a
 	// given path. e.g.: target="some_Qml_Row's_id"; jsondata="{"template":
-	// "path/to/your/template/from/your/main.qml", "variables":{"name": "John Smith"}}"
+	// "path/to/your/template/from/your/main.qml", "variables":
+	// {"name": "John Smith"}}" Only the template's root element will be
+	// accessible via its id. The id can be hardcoded in the template or
+	// dynamically added using the variables section.
 	ModeAddFromFile
 	// ModeRemove deletes an element by its qml-id provided in target.
 	// The jsondata should be a empty string.
@@ -97,8 +102,8 @@ func (c *Controller) AddToQmlFromFilepath(target, jsondata string) {
 }
 
 // RemoveFromQml is shorthand for SendToQml(ModeRemove, ...)
-func (c *Controller) RemoveFromQml(target, jsondata string) {
-	c.SendToQml(ModeRemove, target, jsondata)
+func (c *Controller) RemoveFromQml(target string) {
+	c.SendToQml(ModeRemove, target, "")
 }
 
 // BuildSetModeJSON helps building trivial JSON strings.
