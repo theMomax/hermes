@@ -17,19 +17,27 @@ const (
 	// target element. e.g.: target="some_Qml_Row's_id"; jsondata="
 	// {"template": "Text{text: 'Hello World <name> !'}", "variables":
 	// {"name": "John Smith"}}". Only the template's root element will be
-	// accessible via its id. The id can be hardcoded in the template or
-	// dynamically added using the variables section.
+	// accessible via its id (added to the idMap). The id can be hardcoded
+	// in the template or dynamically added using the variables section.
 	ModeAdd
 	// ModeAddFromFile is the same as ModeAdd, but reads the template from a
 	// given path. e.g.: target="some_Qml_Row's_id"; jsondata="{"template":
 	// "path/to/your/template/from/your/main.qml", "variables":
 	// {"name": "John Smith"}}" Only the template's root element will be
-	// accessible via its id. The id can be hardcoded in the template or
-	// dynamically added using the variables section.
+	// accessible via its id (added to the idMap). The id can be hardcoded
+	// in the template or dynamically added using the variables section.
 	ModeAddFromFile
 	// ModeRemove deletes an element by its qml-id provided in target.
 	// The jsondata should be a empty string.
 	ModeRemove
+	// ModeRead sends the requested values of the given target to the
+	// event listener with the name provided in the jsondata. e.g.:
+	// target="some_Qml_ElementÄs_id"; jsondata="{"eventListener":
+	// "readProperties", "properties":["color","text"]}"
+	ModeRead
+	// ModeCustom follows your rules. You can define the JavaScript processing
+	// in the "hermes.qml" snippet.
+	ModeCustom
 )
 
 //go:generate qtmoc
@@ -96,14 +104,19 @@ func (c *Controller) AddToQml(target, jsondata string) {
 	c.SendToQml(ModeAdd, target, jsondata)
 }
 
-// AddToQmlFromFilepath is shorthand for SendToQml(ModeAddFromFilepath, ...)
-func (c *Controller) AddToQmlFromFilepath(target, jsondata string) {
+// AddToQmlFromFile is shorthand for SendToQml(ModeAddFromFile, ...)
+func (c *Controller) AddToQmlFromFile(target, jsondata string) {
 	c.SendToQml(ModeAddFromFile, target, jsondata)
 }
 
 // RemoveFromQml is shorthand for SendToQml(ModeRemove, ...)
 func (c *Controller) RemoveFromQml(target string) {
 	c.SendToQml(ModeRemove, target, "")
+}
+
+// ReadQml is shorthand for SendToQml(ModeRead, ...)
+func (c *Controller) ReadQml(target, jsondata string) {
+	c.SendToQml(ModeRead, target, jsondata)
 }
 
 // BuildSetModeJSON helps building trivial JSON strings.
@@ -139,7 +152,7 @@ func BuildAddModeJSON(template string, data ...string) string {
 	buff.WriteString(template)
 	buff.WriteString(`"`)
 
-	if len(data)%2 == 0 {
+	if len(data) != 0 && len(data)%2 == 0 {
 		buff.WriteString(`, "variables": {`)
 		for i, d := range data {
 			buff.WriteString(`"`)
@@ -153,6 +166,30 @@ func BuildAddModeJSON(template string, data ...string) string {
 			}
 		}
 
+	}
+	buff.WriteString("}")
+	return buff.String()
+}
+
+// BuildReadModeJSON helps building trivial JSON strings. The eventListener
+// is the event string provided at registration, the properties are the
+// target's wanted qml properties.
+func BuildReadModeJSON(eventListener string, properties ...string) string {
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(`{"eventListener":"`)
+	buff.WriteString(eventListener)
+	buff.WriteString(`"`)
+	if len(properties) != 0 {
+		buff.WriteString(`, "properties":[`)
+		for i, p := range properties {
+			buff.WriteString(`"`)
+			buff.WriteString(p)
+			buff.WriteString(`"`)
+			if i+1 != len(properties) {
+				buff.WriteString(",")
+			}
+		}
+		buff.WriteString(`]`)
 	}
 	buff.WriteString("}")
 	return buff.String()
