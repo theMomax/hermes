@@ -59,7 +59,6 @@ Connections
         // get element id
         var elementId = ""
         qmlElement = qmlElement.replace(/{[^{]*(id\s*:\s*[^\s^;.]+)/i, function(match, p1){
-            console.log("id: "+p1)
             elementId = p1.replace(/\s+/g, "").replace("id:","")
             return match
         })
