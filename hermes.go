@@ -55,6 +55,9 @@ type Controller struct {
 	eventListeners map[string]func(string, string)
 }
 
+// DoLog can be used to activate logging
+var DoLog bool
+
 // NewBridgeController creates a new controller. This should be done
 // before creating a qml window.
 func NewBridgeController(engine *qml.QQmlApplicationEngine) *Controller {
@@ -80,9 +83,13 @@ func (c *Controller) RemoveEventListener(event string) {
 }
 
 func (c *Controller) interpretQmlCommand(action, source, jsondata string) {
-	log.Println("qml to go: " + string(action) + " | " + source + " | " + jsondata)
+	if DoLog {
+		log.Println("qml to go: " + string(action) + " | " + source + " | " + jsondata)
+	}
 	if c.eventListeners[action] != nil {
 		c.eventListeners[action](source, jsondata)
+	} else {
+		log.Println("event listener " + action + " not registered !")
 	}
 }
 
@@ -90,7 +97,9 @@ func (c *Controller) interpretQmlCommand(action, source, jsondata string) {
 // comments for further information on how target and jsondata have
 // to look like.
 func (c *Controller) SendToQml(mode int, target, jsondata string) {
-	log.Println("go to qml: " + string(mode) + " | " + target + " | " + jsondata)
+	if DoLog {
+		log.Println("go to qml: " + string(mode) + " | " + target + " | " + jsondata)
+	}
 	c.qmlBridge.SendToQml(mode, target, jsondata)
 }
 
