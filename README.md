@@ -1,12 +1,14 @@
 # hermes
 
-A high-level communication interface for github.com/therecipe/qt. This package allows you to dynamically add Qml-Elements (from Qml-code as a string or file), set and read their properties and delete them.
+A high-level communication interface for [therecipe's awsome qt binding for Go](github.com/therecipe/qt). This package allows you to dynamically add Qml-Elements (from Qml-code as a string or file), set and read their properties and delete them.
 
 ## Get Started
 
-Go get this repository:
+Go get this repository and let it generate the necessary files for Go to Qml connection:
 ````
 go get github.com/hoffx/hermes
+cd $GOPATH/src/github.com/hoffx/hermes
+go generate
 ````
 Integrate `hermes` into your Qml application on Go side by importing it and creating a new `hermes.Controller`:
 ````Go
@@ -63,3 +65,5 @@ Button{
     onClicked: hermes.sendToGo("someEvent", "yourButton", '{ "extra_information_property": "extra_information_value" }')
 }
 ````
+
+You can use [this project](github.com/hoffx/EduRM) as a reference.
