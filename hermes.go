@@ -3,6 +3,7 @@ package hermes
 import (
 	"bytes"
 	"log"
+	"regexp"
 
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/qml"
@@ -58,6 +59,16 @@ type Controller struct {
 // DoLog can be used to activate logging
 var DoLog bool
 
+var (
+	newlineRegex    *regexp.Regexp
+	newlineWinRegex *regexp.Regexp
+)
+
+func init() {
+	newlineWinRegex = regexp.MustCompile(`\r\n`)
+	newlineRegex = regexp.MustCompile(`\n`)
+}
+
 // NewBridgeController creates a new controller. This should be done
 // before creating a qml window.
 func NewBridgeController(engine *qml.QQmlApplicationEngine) *Controller {
@@ -71,7 +82,14 @@ func NewBridgeController(engine *qml.QQmlApplicationEngine) *Controller {
 }
 
 // AddEventListener registers a function to be called, when the qml-code
-// sends a message with the given event string
+// sends a message with the given event string. The first string passed
+// to the event listener is the source value of the Qml function "sendToGo".
+// The second one is the jsondata string passed to the same function. Note
+// that if there were any newlines in the jsondata, they were escaped to
+// ensure the json.Unmarshal function won't fail. In case there were any,
+// you can restore them by applying the following regex replacement operation:
+// regexp.MustCompile(`\\n`).ReplaceAllString(regexp.MustCompile(`\\r\\n`)
+// .ReplaceAllString(your_json_field_containing_line_breaks, "\r\n"), "\n")
 func (c *Controller) AddEventListener(event string, action func(string, string)) {
 	c.eventListeners[event] = action
 }
@@ -86,6 +104,7 @@ func (c *Controller) interpretQmlCommand(action, source, jsondata string) {
 	if DoLog {
 		log.Println("qml to go: " + string(action) + " | " + source + " | " + jsondata)
 	}
+	jsondata = newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\\\r\\\\n"), "\\\\n")
 	if c.eventListeners[action] != nil {
 		c.eventListeners[action](source, jsondata)
 	} else {
@@ -100,7 +119,7 @@ func (c *Controller) SendToQml(mode int, target, jsondata string) {
 	if DoLog {
 		log.Println("go to qml: " + string(mode) + " | " + target + " | " + jsondata)
 	}
-	c.qmlBridge.SendToQml(mode, target, jsondata)
+	c.qmlBridge.SendToQml(mode, target, newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\\\r\\\\n"), "\\\\n"))
 }
 
 // SetInQml is shorthand for SendToQml(ModeSet, ...)
