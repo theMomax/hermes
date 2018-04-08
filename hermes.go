@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/qml"
@@ -62,11 +63,13 @@ var DoLog bool
 var (
 	newlineRegex    *regexp.Regexp
 	newlineWinRegex *regexp.Regexp
+	tabRegex        *regexp.Regexp
 )
 
 func init() {
 	newlineWinRegex = regexp.MustCompile(`\r\n`)
 	newlineRegex = regexp.MustCompile(`\n`)
+	tabRegex = regexp.MustCompile(`\t`)
 }
 
 // NewBridgeController creates a new controller. This should be done
@@ -104,7 +107,7 @@ func (c *Controller) interpretQmlCommand(action, source, jsondata string) {
 	if DoLog {
 		log.Println("qml to go: " + string(action) + " | " + source + " | " + jsondata)
 	}
-	jsondata = newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\\\r\\\\n"), "\\\\n")
+	jsondata = newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\r\\n"), "\\n")
 	if c.eventListeners[action] != nil {
 		c.eventListeners[action](source, jsondata)
 	} else {
@@ -119,7 +122,7 @@ func (c *Controller) SendToQml(mode int, target, jsondata string) {
 	if DoLog {
 		log.Println("go to qml: " + string(mode) + " | " + target + " | " + jsondata)
 	}
-	c.qmlBridge.SendToQml(mode, target, newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\\\r\\\\n"), "\\\\n"))
+	c.qmlBridge.SendToQml(mode, target, newlineRegex.ReplaceAllString(newlineWinRegex.ReplaceAllString(jsondata, "\\r\\n"), "\\n"))
 }
 
 // SetInQml is shorthand for SendToQml(ModeSet, ...)
@@ -158,7 +161,7 @@ func BuildSetModeJSON(data ...string) string {
 		buff.WriteString("{")
 		for i, d := range data {
 			buff.WriteString(`"`)
-			buff.WriteString(d)
+			buff.WriteString(strings.Replace(tabRegex.ReplaceAllString(d, "\\t"), `"`, `\"`, -1))
 			if i%2 == 0 {
 				buff.WriteString(`":`)
 			} else if i+1 == len(data) {
@@ -179,12 +182,11 @@ func BuildAddModeJSON(template string, data ...string) string {
 	buff.WriteString(`{"template":"`)
 	buff.WriteString(template)
 	buff.WriteString(`"`)
-
 	if len(data) != 0 && len(data)%2 == 0 {
 		buff.WriteString(`, "variables": {`)
 		for i, d := range data {
 			buff.WriteString(`"`)
-			buff.WriteString(d)
+			buff.WriteString(strings.Replace(tabRegex.ReplaceAllString(d, "\\t"), `"`, `\"`, -1))
 			if i%2 == 0 {
 				buff.WriteString(`":`)
 			} else if i+1 == len(data) {
@@ -211,7 +213,7 @@ func BuildReadModeJSON(eventListener string, properties ...string) string {
 		buff.WriteString(`, "properties":[`)
 		for i, p := range properties {
 			buff.WriteString(`"`)
-			buff.WriteString(p)
+			buff.WriteString(strings.Replace(tabRegex.ReplaceAllString(p, "\\t"), `"`, `\"`, -1))
 			buff.WriteString(`"`)
 			if i+1 != len(properties) {
 				buff.WriteString(",")
