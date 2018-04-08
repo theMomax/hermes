@@ -15,12 +15,6 @@ Connections
         var data = ""
         if (jsondata != "") {
             data = JSON.parse(jsondata)
-            for (var key in data) {
-                if (data[key.toString()].toString().includes("\\n")) {
-                    data[key.toString()] = data[key.toString()].toString().replace(/\\r\\n/g, "\r\n")
-                    data[key.toString()] = data[key.toString()].toString().replace(/\\n/g, "\n")
-                }
-            }
         }
         switch(mode) {
         case 0:
